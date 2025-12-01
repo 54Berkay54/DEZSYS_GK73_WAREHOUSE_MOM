@@ -1,113 +1,185 @@
-# DEZSYS_GK73_WAREHOUSE_MOM
-Join GIT repository:  https://github.com/ThomasMicheler/DEZSYS_GK73_WAREHOUSE_MOM.git
+# DEZYS_GK7.3_WAREHOUSE_MOM
+Verfasser: Berkay Genc
+## Aufgabenstellung
+Implementieren Sie die Lager-Kommunikationsplattform mit Hilfe des Java Message Service. Verwenden Sie Apache Kafka (https://kafka.apache.org) als Message Broker Ihrer Applikation. Das Programm soll folgende Funktionen beinhalten:
+- Installation von Apache Kafka in der Zentrale.
+- Jeder Lagerstandort hat eine Message Queue mit einer ID am zentralen Rechner.
+- Jeder Lagerstandort legt in regelmässigen Abständen die Daten des Lagers in der Message Queue ab.
+- Bei einer erfolgreichen Übertragung sendet die Zentrale die Nachricht "SUCCESS" an den Lagerstandort retour.
+- Der zentrale Rechner fragt in regelmässigen Abständen alle Message Queues ab.
+- Der Zentralrechner fuegt alle Daten aller Lagerstandorte zusammen und stellt diese an einer REST Schnittstelle im JSON/XML Format zur Verfügung.
+## Fragen
+**Nennen Sie mindestens 4 Eigenschaften der Message Oriented Middleware?**
+- Asynchronität
+- Entkopplung von Sender und Empfänger
+- Persistenz/Zuverlässigkeit
+- Skalierbarkeit
 
-## Einführung
+**Was versteht man unter einer transienten und synchronen Kommunikation?**
 
-Diese Übung soll die Funktionsweise und Implementierung von eine Message Oriented Middleware (MOM) mit Hilfe des **Frameworks Apache Kafka** demonstrieren. **Message Oriented Middleware (MOM)** ist neben InterProcessCommunication (IPC), Remote Objects (RMI) und Remote Procedure Call (RPC) eine weitere Möglichkeit um eine Kommunikation zwischen mehreren Rechnern umzusetzen.
+Transient bedeutet, dass Nachrichten nicht gespeichert werden und verloren gehen können, wenn der Empfänger nicht verfügbar ist, während synchron bedeutet, dass Sender und Empfänger gleichzeitig aktiv sein müssen und der Sender auf die Antwort wartet.
 
-Die Umsetzung bas
-Die Umsetzung basiert auf einem praxisnahen Beispiel eines Warenlagers. Die Zentrale des Warenlagers moechte jede Stunde den aktuellen Lagerstand aller Lagerstandorte abfragen.
+**Beschreiben Sie die Funktionsweise einer JMS Queue?**
 
-Mit diesem Ziel soll die REST-Applikation aus MidEng 7.1 Warehouse REST and Dataformats bei einem entsprechenden Request http://<IP Wahllokal>/warehouse/send die Daten (JSON oder XML) in eine Message Queue der Zentral uebertragen. 
-In regelmaessigen Abstaenden werden alle Message Queues der Zentrale abgefragt und die Daten aller Standorte gesammelt.
+Eine JMS Queue arbeitet nach dem Point-to-Point-Prinzip, bei dem ein Producer Nachrichten in eine FIFO-Warteschlange sendet und genau ein Consumer diese Nachricht erhält und verarbeitet.
 
-Die gesammelten Lagerstände werden ueber eine REST-Schnittstelle (in XML oder JSON) dem Berichtswesen des Managements zur Verfuegung gestellt.
+**JMS Overview - Beschreiben Sie die wichtigsten JMS Klassen und deren Zusammenhang?**
 
-## 1.1 Ziele  
+ConnectionFactory erstellt Verbindungen, Connection stellt die Verbindung zum Broker dar, Session erzeugt Messages, Producers und Consumers, MessageProducer und MessageConsumer senden bzw. empfangen Nachrichten und Destinations (Queue/Topic) bestimmen das Ziel.
 
-Das Ziel dieser Übung ist die **Implementierung einer Kommunikationsplattform für Warenlager. Dabei erfolgt ein Datenaustausch von mehreren Lagerstandorten mit der Zentrale unter Verwendung einer Message Oriented Middleware (MOM)**. Die einzelnen Daten des Warenlagers sollen an die Zentrale übertragen werden. Es sollen **nachrichtenbasierten Protokolle mit Message Queues** verwendet werden. Durch diese lose Kopplung kann gewährleistet werden, dass in Zukunft weitere Standorte hinzugefügt bzw. Kooperationspartner eingebunden werden können.
+**Beschreiben Sie die Funktionsweise eines JMS Topic?**
 
-Fuer die REST-Schnittstelle in der Zentralle muessen die Datenstrukturen der einzelnene Lagerstandorte zusammengefasst werden. Um die Datenintegrität zu garantieren, sollen jene Daten, die mit der Middleware übertragen werden in einer LOG-Datei abgespeichert werden.  
+Ein JMS Topic arbeitet im Publish/Subscribe-Modell, bei dem ein Publisher Nachrichten veröffentlicht, die alle aktiven Subscriber gleichzeitig erhalten.
 
-## 1.2 Voraussetzungen
+**Was versteht man unter einem lose gekoppelten verteilten System? Nennen Sie ein Beispiel dazu. Warum spricht man hier von lose?**
 
-*   Grundlagen Architektur von verteilten Systemen
-*   Grundlagen zur nachrichtenbasierten Systemen / Message Oriented Middleware  
-*   Verwendung des Message Brokers Apache Kafka
-*   Verwendung der XML- oder JSON Datenstruktur des Wahllokals
-*   Verwendung der Demo-Applikation MOMApplication (inklusive MOMReceiver und MOMSender) (siehe Repo)
+Ein lose gekoppeltes System besteht aus unabhängigen Komponenten, die nur über definierte Nachrichten oder Schnittstellen kommunizieren, z. B. Microservices über eine Message Queue, und man spricht von „lose“, weil Änderungen an einer Komponente die anderen kaum betreffen.
 
-## 1.3 Aufgabenstellung
+## Code Snippets
+application.yml
+````yaml
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+````
+build.gradle
+````groovy
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.kafka:spring-kafka'
 
-Implementieren Sie die Lager-Kommunikationsplattform mit Hilfe des Java Message Service. Verwenden Sie Apache Kafka ([https://kafka.apache.org](https://kafka.apache.org)) als Message Broker Ihrer Applikation. Das Programm soll folgende Funktionen beinhalten:
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.3'
 
- *   Installation von Apache Kafka in der Zentrale.
- *   Jeder Lagerstandort hat eine Message Queue mit einer ID am zentralen Rechner.
- *   Jeder Lagerstandort legt in regelmässigen Abständen die Daten des Lagers in der Message Queue ab.
- *   Bei einer erfolgreichen Übertragung sendet die Zentrale die Nachricht "SUCCESS" an den Lagerstandort retour.
- *   Der zentrale Rechner fragt in regelmässigen Abständen alle Message Queues ab.
- *   Der Zentralrechner fuegt alle Daten aller Lagerstandorte zusammen und stellt diese an einer REST Schnittstelle im JSON/XML Format zur Verfügung.
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
-## 1.4 Demo Applikation
+}
+````
+docker-compose.yml
+````yaml
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
 
-*   Installation und starten des Message Broker Apache Kafka (Container)  
-[https://kafka.apache.org/quickstart](https://kafka.apache.org/quickstart)    
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+````
+Senden einer Nachricht an Kafka Topic
+````java
 
-*   Erstellen einer Message Queue "quickstart-events" (Terminal/Container)   
-     `cd /opt/kafka`   
-     `bin/kafka-topics.sh --create --topic quickstart-events --bootstrap-server localhost:9092`    
+@PostMapping("/send")
+public String sendWarehouseData(@RequestBody WarehouseData data) throws JsonProcessingException {
+    data.setTimestamp(Instant.now().toString());
+    String json = new ObjectMapper().writeValueAsString(data);
+    kafkaTemplate.send("warehouse-input", json);
+    return "SUCCESS: " + json;
+}
+````
+Empfangen einer Nachricht von Kafka Topic
+````java
 
-*  Senden von Nachrichten (via Terminal)    
-    `bin/kafka-console-producer.sh --topic quickstart-events --bootstrap-server localhost:9092`   
-    `> Hallo Spencer, hier ist Nachricht 1.`   
-    `> Hallo Spencer, hier ist Nachricht 2`   
-    `> Hallo Spencer, hier ist Nachricht 3.`   
+@KafkaListener(topics = "warehouse-input")
+public void receiveMessage(String message) throws Exception {
+    WarehouseData data = new ObjectMapper().readValue(message, WarehouseData.class);
+    System.out.println("Zentrale empfängt: " + message);
+    aggregator.add(data);
+}
+````
+Hinzufügen der empfangenen Daten
+````java
 
-*  Lesen von Nachrichten (via Terminal)   
-    `bin/kafka-console-consumer.sh --topic quickstart-events --from-beginning --bootstrap-server localhost:9092`   
+public synchronized void add(WarehouseData data) {
+    aggregated.add(data);
+}
+````
+Abrufen der Daten im JSON Format
+````java
 
-### 1.4.1 warehouse_demo
+@GetMapping(value = "/stock", produces = MediaType.APPLICATION_JSON_VALUE)
+public List<WarehouseData> getJsonStock() {
+    return aggregator.getAll();
+}
+````
+Abrufen der Daten im XML Format
+````java
 
-Demo 1 beinhaltet eine Implementierung, die alle Einzelschritte zur Implementierung von Java und JMS beinhaltet und uebersichtlich darstellt. 
+@GetMapping(value = "/stock.xml", produces = MediaType.APPLICATION_XML_VALUE)
+public WarehousesXml getXmlStock() {
+    return new WarehousesXml(aggregator.getAll());
+}
+````
+## Terminal Befehle
+Starten der Spring Boot Applikation
+````
+./gradlew --refresh dependencies bootRun
+````
+Docker Container starten
+````
+docker compose up -d
+````
+Überprüfen ob apache/kafka läuft
+```
+docker exec -it kafka kafka-topics --list --bootstrap-server localhost:9092
+```
+Versenden von Daten an die Zentrale
+```
+curl -Method POST http://localhost:8080/warehouse/send -Headers @{ "Content-Type"="application/json" } -Body '{"warehouseId":"W1","quantity":50}'
+```
+Abrufen des Lagers in XML: http://localhost:8080/central/stock.xml
 
- *   Starten der Demo Applikation 
-     `gradle clean bootRun`
+Abrufen des Lagers in JSON: http://localhost:8080/central/stock
 
- *   Senden einer Nachricht 
-      http://localhost:8080/send?message=Hallo Spencer
+Versenden einer Nachricht: http://localhost:8080/send?message=HalloSpencer
 
- *   Empfang der Nachricht auf der Konsole
-      Hallo Spencer
+Die Topics in Kafka anlegen
+````
+docker exec -it kafka bash
+[appuser@681e006f3605 ~]$ kafka-topics --create --topic warehouse-input --bootstrap-server localhost:9092
+Created topic warehouse-inout
+[appuser@681e006f3605 ~]$ kafka-topics --create --topic warehouse-response --bootstrap-server localhost:9092
+Created topic warehouse-response.
+[appuser@681e006f3605 ~]$ kafka-topics --list --bootstrap-server localhost:9092
+__consumer_offsets
+quickstart-events
+warehouse-input
+warehouse-response
+````
+## Quellen
+- Grundlagen Message Oriented Middleware: Presentation
+- Middleware: Apache Kafka
+- Apache Kafka | Getting Started
 
-## 1.5 Bewertung  
+https://medium.com/@abhishekranjandev/a-comprehensive-guide-to-integrating-kafka-in-a-spring-boot-application-a4b912aee62e https://spring.io/guides/gs/messaging-jms/
 
-*   Gruppengrösse: 1 Person
-*   Abgabemodus: per Protokoll, bei EK kann ein Abgabegespraech erforderlich sein
-*   Anforderungen **"Grundlagen"**
-    *   Implementierung der Kommunikation zwischen **EINEM** Lagerstandort und dem Zentralrechner (JMS Queue)  
-    *   Ausgabe der empfangenen Daten am Zentralrechner (Konsole oder Log-Datei)
-    *   Beantwortung der Fragestellungen   
-*   Anforderungen **"Erweiterte Grundlagen"**
-    *   Zusammensetzung der Daten aller Lagerstandorte in einer zentralen JSON/XML-Struktur
-    *   Implementierung der REST Schnittstelle am Zentralrechner
-*  Erweiterte Anforderungen **"Vertiefung"**
-    *   Implementierung der Kommunikation mit **MEHREREN** Lagerstandorte und dem Zentralrechner
-    *   Logging der Daten bei aller Lagerstandorte und dem Zentralrechner   
-    *   Rückmeldung des Ergebnisses der Übertragung vom Zentralrechner an den einzelnen Lagerstandort (JMS Topic)  
+https://medium.com/@mailshine/activemq-getting-started-with-springboot-a0c3c960356e
 
-## 1.6 Fragestellung für Protokoll
+http://www.academictutorials.com/jms/jms-introduction.asp
 
-*   Nennen Sie mindestens 4 Eigenschaften der Message Oriented Middleware?  
-*   Was versteht man unter einer transienten und synchronen Kommunikation?
-*   Beschreiben Sie die Funktionsweise einer JMS Queue?
-*   JMS Overview - Beschreiben Sie die wichtigsten JMS Klassen und deren Zusammenhang?
-*   Beschreiben Sie die Funktionsweise eines JMS Topic?
-*   Was versteht man unter einem lose gekoppelten verteilten System? Nennen Sie ein Beispiel dazu. Warum spricht man hier von lose?
-`
-## 1.6 Links & Dokumente
+http://docs.oracle.com/javaee/1.4/tutorial/doc/JMS.html#wp84181
 
-*   Grundlagen Message Oriented Middleware: [Presentation](https://elearning.tgm.ac.at/pluginfile.php/119077/mod_resource/content/1/dezsys_mom_einfuehrung.pdf)
-*   Middleware:  [Apache Kafka](https://kafka.apache.org/quickstart)  
-*   [Apache Kafka | Getting Started](https://kafka.apache.org/documentation/#gettingStarted)   
+https://www.oracle.com/java/technologies/java-message-service.html
 
-    
-  https://medium.com/@abhishekranjandev/a-comprehensive-guide-to-integrating-kafka-in-a-spring-boot-application-a4b912aee62e
-  https://spring.io/guides/gs/messaging-jms/  
-  https://medium.com/@mailshine/activemq-getting-started-with-springboot-a0c3c960356e   
-  http://www.academictutorials.com/jms/jms-introduction.asp   
-  http://docs.oracle.com/javaee/1.4/tutorial/doc/JMS.html#wp84181    
-  https://www.oracle.com/java/technologies/java-message-service.html   
-  http://www.oracle.com/technetwork/articles/java/introjms-1577110.html  
-  https://spring.io/guides/gs/messaging-jms  
-  https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-messaging.html  
-  https://dzone.com/articles/using-jms-in-spring-boot-1  
+http://www.oracle.com/technetwork/articles/java/introjms-1577110.html
+
+https://spring.io/guides/gs/messaging-jms
+
+https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-messaging.html
+
+https://dzone.com/articles/using-jms-in-spring-boot-1
