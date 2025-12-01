@@ -1,4 +1,4 @@
-# DEZYS_GK7.3_WAREHOUSE_MOM
+# DEZSYS_GK73_WAREHOUSE_MOM
 Verfasser: Berkay Genc
 ## Aufgabenstellung
 Implementieren Sie die Lager-Kommunikationsplattform mit Hilfe des Java Message Service. Verwenden Sie Apache Kafka (https://kafka.apache.org) als Message Broker Ihrer Applikation. Das Programm soll folgende Funktionen beinhalten:
