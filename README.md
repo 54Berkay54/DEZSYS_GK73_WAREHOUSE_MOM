@@ -98,7 +98,7 @@ Empfangen einer Nachricht von Kafka Topic
 @KafkaListener(topics = "warehouse-input")
 public void receiveMessage(String message) throws Exception {
     WarehouseData data = new ObjectMapper().readValue(message, WarehouseData.class);
-    System.out.println("Zentrale empfängt: " + message);
+    System.out.println("SUCCESS" + message);
     aggregator.add(data);
 }
 ````
@@ -146,7 +146,7 @@ Abrufen des Lagers in XML: http://localhost:8080/central/stock.xml
 
 Abrufen des Lagers in JSON: http://localhost:8080/central/stock
 
-Versenden einer Nachricht: http://localhost:8080/send?message=HalloSpencer
+Versenden einer Nachricht: http://localhost:8080/send?message=Hallo%20Spencer,%20hier%20ist%20Nachricht%201.
 
 Die Topics in Kafka anlegen
 ````

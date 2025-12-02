@@ -15,7 +15,7 @@ public class CentralConsumer {
     public void receiveMessage(String message) throws Exception {
         WarehouseData data = new ObjectMapper().readValue(message, WarehouseData.class);
 
-        System.out.println("Zentrale empfängt: " + message);
+        System.out.println("SUCCESS" + message);
 
         aggregator.add(data);
     }
